@@ -71,7 +71,18 @@ class LocalFileSystem(FileSystem):
                 return
 
         if parents:
-            os.makedirs(path)
+            # for Python 2 compatibility
+            try:
+                FileNotExistsError
+            except NameError:
+                FileNotExistsError = OSError
+
+            try:
+                os.makedirs(path)
+            except FileNotExistsError as err:
+                # somebody already created the path
+                if err.errno != errno.EEXIST:
+                    raise
         else:
             if not os.path.exists(os.path.dirname(path)):
                 raise MissingParentDirectory()
